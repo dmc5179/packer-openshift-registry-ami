@@ -1,0 +1,4 @@
+*.mine
+*.swp
+build.*
+scripts/pull-secret.json

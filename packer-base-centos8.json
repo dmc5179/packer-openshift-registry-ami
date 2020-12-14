@@ -1,0 +1,51 @@
+{
+  "variables": {
+    "name": "centos-8-openshift-registry-{{isotime \"200601021504\"}}",
+    "source_ami": "ami-056b03dba13a2c9dd",
+    "access_key": "",
+    "secret_key": "",
+    "region": "us-east-1",
+    "ocp_ver": "4.6.8"
+  },
+  "builders": [
+    {
+      "type": "amazon-ebs",
+      "access_key": "{{user `access_key`}}",
+      "secret_key": "{{user `secret_key`}}",
+      "ami_name": "{{user `name`}}",
+      "region": "{{user `region`}}",
+      "source_ami": "{{user `source_ami`}}",
+      "instance_type": "t3.large",
+      "communicator": "ssh",
+      "ssh_username": "centos",
+      "ami_virtualization_type": "hvm",
+      "ebs_optimized": true,
+      "ena_support": true,
+      "sriov_support": true,
+      "launch_block_device_mappings": [{
+        "volume_type": "gp2",
+        "device_name": "/dev/xvdf",
+        "delete_on_termination": true,
+        "volume_size": 200
+      }],
+      "run_tags": {
+        "Name": "packer-openshift-registry"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "scripts/pull-secret.json",
+      "destination": "/tmp/pull-secret.json"
+    },
+    {
+      "type": "shell",
+      "execute_command": "sudo -E -S bash -x '{{ .Path }}' -s true",
+      "script": "scripts/create_openshift_registry.sh",
+      "environment_vars": [
+        "OCP_VER={{user `ocp_ver`}}"
+      ]
+    }
+  ]
+}
