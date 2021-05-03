@@ -2,3 +2,6 @@
 *.swp
 build.*
 scripts/pull-secret.json
+validate.hwm
+validate.pwd
+validate.pwi
