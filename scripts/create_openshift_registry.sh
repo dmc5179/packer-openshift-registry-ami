@@ -47,7 +47,7 @@ openssl req -newkey rsa:4096 -nodes -keyout "${REGISTRY_DIR}/certs/domain.key" \
   -subj "/C=US/ST=VA/L=Chantilly/O=RedHat/OU=RedHat/CN=${HOSTNAME}/"
 
 # Print the certificate
-openssl x509 -in "${REGISTRY_DIR}/certs/domain.crt" -text -noout
+openssl x509 -in "${REGISTRY_DIR}/certs/registry.crt" -text -noout
 
 htpasswd -bBc ${REGISTRY_DIR}/auth/htpasswd dummy dummy
 
@@ -80,23 +80,12 @@ ${REGISTRY_IMG}
 # Configure SELinux to allow containers in systemd services
 sudo setsebool -P container_manage_cgroup on
 
-sudo bash -c "cat <<EOF >> /etc/systemd/system/registry-container.service
-
-[Unit]
-Description=Container Registry
-
-[Service]
-Restart=always
-ExecStart=/usr/bin/podman start -a registry_server
-ExecStop=/usr/bin/podman stop -t 15 registry_server
-
-[Install]
-WantedBy=multi-user.target
-
-EOF"
+podman generate systemd --container-prefix=container --name --restart-policy=always
 
 sudo systemctl daemon-reload
-sudo systemctl enable --now registry-container.service
+
+#sudo systemctl enable --now registry-container.service
+
 sleep 5
 
 jq ".auths |= .+ {\"${REGISTRY_HOSTNAME}:${REGISTRY_PORT}\": { \"auth\": \"ZHVtbXk6ZHVtbXk=\" }}" /tmp/pull-secret.json > /tmp/pull-secret-new.json
